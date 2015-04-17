@@ -35,20 +35,7 @@ class Mosscow < Sinatra::Base
   end
 
   get '/500' do
-    <<"EOS"
-    <html>
-      <head>
-        <title>500 Internal Server Error</title>
-      </head>
-      <body>
-        <h1>Internal Server Error</h1>
-        <img src='images/500.jpg'>
-        <p>
-        なんかだめでしたすみませんすみません:(；ﾞﾟ'ωﾟ')::(；ﾞﾟ'ωﾟ'):
-        </p>
-      </body>
-    </html>
-EOS
+    halt 500, haml(:internal_server_error)
   end
 
   get '/400' do
