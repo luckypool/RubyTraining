@@ -26,6 +26,12 @@ class Mosscow < Sinatra::Base
     content_type 'text/html'
   end
 
+  helpers do
+    def json_halt(status, object)
+      halt status, { 'Content-Type' => 'application/json' }, JSON.dump(object)
+    end
+  end
+
   get '/problems' do
     haml :problems
   end
@@ -46,8 +52,7 @@ class Mosscow < Sinatra::Base
     begin
       fail
     rescue
-      response.status = 500
-      return nil
+      halt 500
     end
   end
 
@@ -68,8 +73,7 @@ class Mosscow < Sinatra::Base
     begin
       todo.destroy
     rescue
-      response.status = 500
-      return nil
+      halt 500
     end
     response.status = 204
     nil
@@ -82,7 +86,7 @@ class Mosscow < Sinatra::Base
       params = JSON.parse(request.body.read)
     rescue => e
       p e.backtrace unless ENV['RACK_ENV'] == 'test'
-      halt 400, { 'Content-Type' => 'application/json' }, JSON.dump(message: 'set valid JSON for request raw body.')
+      json_halt 400, message: 'set valid JSON for request raw body.'
     end
 
     todo.is_done = params['is_done']
@@ -93,7 +97,7 @@ class Mosscow < Sinatra::Base
       content_type :json
       JSON.dump(todo.as_json)
     else
-      halt 400, { 'Content-Type' => 'application/json' }, JSON.dump(message: todo.errors.messages)
+      json_halt 400, message: todo.errors.messages
     end
   end
 
@@ -102,7 +106,7 @@ class Mosscow < Sinatra::Base
       params = JSON.parse(request.body.read)
     rescue => e
       p e.backtrace unless ENV['RACK_ENV'] == 'test'
-      halt 400, { 'Content-Type' => 'application/json' }, JSON.dump(message: 'set valid JSON for request raw body.')
+      json_halt 400, message: 'set valid JSON for request raw body.'
     end
 
     todo = Todo.new(task_title: params['task_title'],
@@ -114,7 +118,7 @@ class Mosscow < Sinatra::Base
       content_type :json
       JSON.dump(todo.as_json)
     else
-      halt 400, { 'Content-Type' => 'application/json' }, JSON.dump(message: todo.errors.messages)
+      json_halt 400, message: todo.errors.messages
     end
   end
 
