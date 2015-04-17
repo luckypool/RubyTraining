@@ -143,7 +143,6 @@ describe 'app.rb' do
         File.read('public/404.txt')
       end
       it 'returns 404' do
-        pending('「404を表示するページ」を解くにはこの行を削除してね')
         get '/404'
         expect(last_response.status).to eq 404
         expect(last_response.body).to eq expected_body
