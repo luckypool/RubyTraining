@@ -123,9 +123,8 @@ describe 'app.rb' do
         allow_any_instance_of(Todo).to receive(:destroy).and_raise
       end
 
-      it 'returns 500' do
-        delete "/api/todos/#{id}"
-        expect(last_response.status).to eq 500
+      it 'raises RuntimeError' do
+        expect { delete "/api/todos/#{id}" }.to raise_error(RuntimeError)
       end
     end
   end
@@ -176,7 +175,6 @@ describe 'app.rb' do
 
   context 'GET /error' do
     it 'returns 500' do
-      pending('delete this line after you create Rack error catching module')
       expect { get '/error' }.to raise_error(RuntimeError)
     end
   end

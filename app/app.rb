@@ -49,11 +49,7 @@ class Mosscow < Sinatra::Base
   end
 
   get '/error' do
-    begin
-      fail
-    rescue
-      halt 500
-    end
+    fail
   end
 
   get '/' do
@@ -70,11 +66,7 @@ class Mosscow < Sinatra::Base
 
   delete '/api/todos/:id' do
     todo = Todo.where(id: params[:id]).first
-    begin
-      todo.destroy
-    rescue
-      halt 500
-    end
+    todo.destroy
     response.status = 204
     nil
   end
