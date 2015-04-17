@@ -1,6 +1,7 @@
 require 'sinatra/base'
 require 'sinatra/activerecord'
 require 'sinatra/reloader'
+require 'sinatra/json'
 require 'json'
 require 'haml'
 require 'redcarpet'
@@ -9,6 +10,7 @@ require_relative 'models/todo'
 
 class Mosscow < Sinatra::Base
   register Sinatra::ActiveRecordExtension
+  helpers Sinatra::JSON
 
   set :static, true
   set :public_folder, 'public'
@@ -29,6 +31,13 @@ class Mosscow < Sinatra::Base
   helpers do
     def json_halt(status, object)
       halt status, { 'Content-Type' => 'application/json' }, JSON.dump(object)
+    end
+
+    def parse_json(string)
+      JSON.parse(string)
+    rescue => e
+      p e.backtrace unless ENV['RACK_ENV'] == 'test'
+      json_halt 400, message: 'set valid JSON for request raw body.'
     end
   end
 
@@ -65,50 +74,34 @@ class Mosscow < Sinatra::Base
   end
 
   delete '/api/todos/:id' do
-    todo = Todo.where(id: params[:id]).first
+    todo = Todo.where(id: params['id']).first
     todo.destroy
     response.status = 204
     nil
   end
 
   put '/api/todos/:id' do
-    todo = Todo.where(id: params[:id]).first
-
-    begin
-      params = JSON.parse(request.body.read)
-    rescue => e
-      p e.backtrace unless ENV['RACK_ENV'] == 'test'
-      json_halt 400, message: 'set valid JSON for request raw body.'
-    end
-
+    params = parse_json(request.body.read)
+    todo = Todo.where(id: params['id']).first
     todo.is_done = params['is_done']
     todo.task_title = params['task_title']
     if todo.valid?
       todo.save!
-      response.status = 200
-      content_type :json
-      JSON.dump(todo.as_json)
+      json todo.as_json
     else
       json_halt 400, message: todo.errors.messages
     end
   end
 
   post '/api/todos' do
-    begin
-      params = JSON.parse(request.body.read)
-    rescue => e
-      p e.backtrace unless ENV['RACK_ENV'] == 'test'
-      json_halt 400, message: 'set valid JSON for request raw body.'
-    end
-
+    params = parse_json(request.body.read)
     todo = Todo.new(task_title: params['task_title'],
                     is_done: params['is_done'],
                     order: params['order'])
     if todo.valid?
       todo.save!
       response.status = 201
-      content_type :json
-      JSON.dump(todo.as_json)
+      json todo.as_json
     else
       json_halt 400, message: todo.errors.messages
     end
